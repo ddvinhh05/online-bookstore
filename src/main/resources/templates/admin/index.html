@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản trị')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('home')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+
+        <section class="home-hero">
+            <h1 class="brand-mark">Quản trị</h1>
+            <p class="lead">Quản lý kho, đơn hàng, nhân viên và phân quyền.</p>
+            <div class="home-cta">
+                <a th:href="@{/admin/staff}" class="btn btn-accent">Nhân viên</a>
+                <a th:href="@{/admin/orders}" class="btn btn-on-dark">Đơn hàng</a>
+            </div>
+        </section>
+
+        <section class="home-grid" aria-label="Quản lý" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+            <a th:href="@{/admin/books}" class="home-link">
+                <h2>Kho sách</h2>
+                <p>Thêm, sửa, xóa sách và theo dõi tồn kho.</p>
+                <span class="meta">Quản lý →</span>
+            </a>
+            <a th:href="@{/admin/categories}" class="home-link">
+                <h2>Danh mục</h2>
+                <p>Phân loại sản phẩm trong hệ thống.</p>
+                <span class="meta">Quản lý →</span>
+            </a>
+            <a th:href="@{/admin/orders}" class="home-link">
+                <h2>Đơn &amp; hoàn trả</h2>
+                <p>Xem mọi đơn hàng và duyệt yêu cầu đổi trả.</p>
+                <span class="meta">Xử lý →</span>
+            </a>
+            <a th:href="@{/admin/staff}" class="home-link">
+                <h2>Nhân viên</h2>
+                <p>Tạo tài khoản STAFF, xếp ca làm và phân quyền.</p>
+                <span class="meta">Quản lý →</span>
+            </a>
+            <a th:href="@{/admin/discounts}" class="home-link">
+                <h2>Mã giảm giá</h2>
+                <p>Tạo mã % giảm áp dụng khi khách thanh toán.</p>
+                <span class="meta">Quản lý →</span>
+            </a>
+            <a th:href="@{/admin/revenue}" class="home-link">
+                <h2>Doanh thu</h2>
+                <p>Doanh thu đơn đã giao, đơn hủy và hoàn trả.</p>
+                <span class="meta">Xem →</span>
+            </a>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

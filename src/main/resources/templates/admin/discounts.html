@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mã giảm giá')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('discounts')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <header class="page-header">
+            <div>
+                <h1>Mã giảm giá</h1>
+                <p>Tạo mã để khách áp dụng khi thanh toán giỏ hàng.</p>
+            </div>
+        </header>
+
+        <section class="panel" style="margin-bottom:1.5rem;">
+            <div class="panel-head">
+                <div>
+                    <h2>Tạo mã mới</h2>
+                    <p>Nhập mã, % giảm và số lượng lượt dùng (để trống = không giới hạn).</p>
+                </div>
+            </div>
+            <form th:action="@{/admin/discounts/create}" method="post" class="form-grid" style="padding:0 1.25rem 1.25rem;">
+                <div class="field span-3">
+                    <label>Mã *</label>
+                    <input type="text" name="code" required maxlength="40" placeholder="VD: SALE10"/>
+                </div>
+                <div class="field span-3">
+                    <label>Giảm (%) *</label>
+                    <input type="number" name="percentOff" required min="1" max="100" value="10"/>
+                </div>
+                <div class="field span-3">
+                    <label>Số lượng lượt dùng</label>
+                    <input type="number" name="maxUses" min="1" placeholder="VD: 50 (trống = ∞)"/>
+                </div>
+                <div class="field span-3">
+                    <label>Mô tả</label>
+                    <input type="text" name="description" maxlength="200" placeholder="Giảm 10% toàn đơn"/>
+                </div>
+                <div class="field span-4" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-primary">Tạo mã</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Danh sách mã</h2>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Giảm</th>
+                        <th>Số lượng</th>
+                        <th>Mô tả</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${listCodes}">
+                        <td class="title-cell" th:text="${c.code}">SALE10</td>
+                        <td th:text="${c.percentOff} + '%'">10%</td>
+                        <td>
+                            <th:block th:if="${c.maxUses == null}">Không giới hạn</th:block>
+                            <th:block th:if="${c.maxUses != null}">
+                                <span th:text="${c.usedCount != null ? c.usedCount : 0}">0</span>
+                                /
+                                <span th:text="${c.maxUses}">50</span>
+                                <span class="muted" th:text="' (còn ' + ${c.remainingUses} + ')'"></span>
+                            </th:block>
+                        </td>
+                        <td class="muted" th:text="${c.description != null ? c.description : '—'}">—</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${c.active} ? ' badge-ok' : ' badge-muted'"
+                                  th:text="${c.active} ? 'Đang bật' : 'Đã tắt'">Đang bật</span>
+                        </td>
+                        <td class="header-actions">
+                            <form th:action="@{/admin/discounts/toggle}" method="post" style="display:inline;">
+                                <input type="hidden" name="id" th:value="${c.id}"/>
+                                <input type="hidden" name="active" th:value="${!c.active}"/>
+                                <button type="submit" class="btn btn-ghost btn-sm"
+                                        th:text="${c.active} ? 'Tắt' : 'Bật'">Tắt</button>
+                            </form>
+                            <form th:action="@{/admin/discounts/delete}" method="post" style="display:inline;"
+                                  onsubmit="return confirm('Xóa mã này?');">
+                                <input type="hidden" name="id" th:value="${c.id}"/>
+                                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listCodes)}">
+                        <td colspan="6" class="empty">Chưa có mã giảm giá.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

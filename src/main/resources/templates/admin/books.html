@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Kho sách')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('books')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <header class="page-header">
+            <div>
+                <h1>Kho sách</h1>
+                <p>Quản lý tồn kho sách trong hệ thống.</p>
+            </div>
+            <div class="header-actions">
+                <a th:href="@{/admin/categories}" class="btn btn-ghost">Danh mục</a>
+                <a th:href="@{/admin/books/new}" class="btn btn-primary">+ Thêm sách</a>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ảnh</th>
+                        <th>Tên sách</th>
+                        <th>Tác giả</th>
+                        <th>Danh mục</th>
+                        <th>Giá</th>
+                        <th>Tồn kho</th>
+                        <th>Mô tả</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="book : ${listBooks}">
+                        <td class="muted" th:text="${book.id}">1</td>
+                        <td>
+                            <img th:if="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}"
+                                 th:src="@{${book.imagePath}}" alt="" class="book-thumb-sm"/>
+                            <span th:unless="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}" class="muted">—</span>
+                        </td>
+                        <td class="title-cell" th:text="${book.title}">Tên sách</td>
+                        <td th:text="${book.author}">Tác giả</td>
+                        <td>
+                            <span class="badge badge-cat"
+                                  th:text="${book.category != null ? book.category.name : 'Chưa phân loại'}">Danh mục</span>
+                        </td>
+                        <td class="price"
+                            th:text="${#numbers.formatDecimal(book.price, 1, 'POINT', 0, 'COMMA')} + ' đ'">150.000 đ</td>
+                        <td>
+                            <span th:class="${book.stockQuantity == 0} ? 'stock-out' : (${book.stockQuantity &lt; 5} ? 'stock-low' : 'stock-ok')"
+                                  th:text="${book.stockQuantity}">20</span>
+                        </td>
+                        <td class="muted"
+                            th:text="${book.description != null and !#strings.isEmpty(book.description) ? #strings.abbreviate(book.description, 48) : '—'}">Mô tả</td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/admin/books/edit/{id}(id=${book.id})}" class="btn btn-ghost btn-sm">Sửa</a>
+                                <a th:href="@{/admin/books/delete/{id}(id=${book.id})}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Bạn có chắc muốn xóa cuốn sách này?');">Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listBooks)}">
+                        <td colspan="9" class="empty">Chưa có sách nào. Hãy thêm cuốn đầu tiên.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

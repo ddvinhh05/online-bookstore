@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đơn hàng nhân viên')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('orders')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <header class="page-header">
+            <div>
+                <h1>Đơn hàng &amp; hoàn trả</h1>
+                <p>Chỉ hiện nút thao tác mà tài khoản của bạn được cấp quyền.</p>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Tất cả đơn hàng</h2>
+                    <p>Bấm vào một dòng đơn để xem đầy đủ. Chỉ hiện nút thao tác theo quyền của bạn.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${listOrders}"
+                        class="order-row"
+                        th:attr="data-href=@{/staff/orders/{id}(id=${order.id})}">
+                        <td class="title-cell">
+                            <a class="order-link" th:href="@{/staff/orders/{id}(id=${order.id})}"
+                               th:text="'#' + ${order.id}">#1</a>
+                        </td>
+                        <td th:text="${order.user.username}">User</td>
+                        <td class="muted"
+                            th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm') : '—'}">Date</td>
+                        <td class="price"
+                            th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${order.status == 'DELIVERED' or order.status == 'COMPLETED'} ? ' badge-ok' : (${order.status == 'SHIPPING' or order.status == 'CONFIRMED'} ? ' badge-pending' : (${order.status == 'PENDING'} ? ' badge-pending' : ' badge-muted'))"
+                                  th:text="${statusLabels[order.status] != null ? statusLabels[order.status] : order.status}">Chờ xác nhận</span>
+                        </td>
+                        <td class="no-row-nav" onclick="event.stopPropagation()">
+                            <div class="actions">
+                                <form th:if="${order.status == 'PENDING' and perms.contains('ORDER_CONFIRM')}"
+                                      th:action="@{/staff/orders/status}" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${order.id}"/>
+                                    <input type="hidden" name="status" value="CONFIRMED"/>
+                                    <button type="submit" class="btn btn-ok btn-sm">Xác nhận đơn</button>
+                                </form>
+
+                                <form th:if="${order.status == 'CONFIRMED' and perms.contains('ORDER_SHIP')}"
+                                      th:action="@{/staff/orders/status}" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${order.id}"/>
+                                    <input type="hidden" name="status" value="SHIPPING"/>
+                                    <button type="submit" class="btn btn-primary btn-sm">Đang vận chuyển</button>
+                                </form>
+
+                                <form th:if="${order.status == 'SHIPPING' and perms.contains('ORDER_DELIVER')}"
+                                      th:action="@{/staff/orders/status}" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${order.id}"/>
+                                    <input type="hidden" name="status" value="DELIVERED"/>
+                                    <button type="submit" class="btn btn-ok btn-sm">Đã giao</button>
+                                </form>
+
+                                <form th:if="${(order.status == 'PENDING' or order.status == 'CONFIRMED' or order.status == 'SHIPPING') and perms.contains('ORDER_CANCEL')}"
+                                      th:action="@{/staff/orders/cancel}" method="post" style="display:inline;"
+                                      onsubmit="return confirm('Hủy đơn này và hoàn lại tồn kho?');">
+                                    <input type="hidden" name="id" th:value="${order.id}"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Hủy đơn</button>
+                                </form>
+
+                                <span th:if="${order.status != 'DELIVERED' and order.status != 'CANCELLED' and order.status != 'COMPLETED'
+                                        and ((order.status == 'PENDING' and !perms.contains('ORDER_CONFIRM'))
+                                        or (order.status == 'CONFIRMED' and !perms.contains('ORDER_SHIP'))
+                                        or (order.status == 'SHIPPING' and !perms.contains('ORDER_DELIVER')))}"
+                                      class="muted">Không có quyền thao tác</span>
+
+                                <span th:if="${order.status == 'DELIVERED' or order.status == 'CANCELLED' or order.status == 'COMPLETED'}"
+                                      class="muted">Hoàn tất</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listOrders)}">
+                        <td colspan="6" class="empty">Chưa có đơn hàng nào.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Yêu cầu hoàn trả</h2>
+                    <p>Bấm vào một dòng yêu cầu để xem đầy đủ. Duyệt / từ chối theo quyền được cấp.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>SĐT</th>
+                        <th>Ảnh</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="ret : ${listReturns}"
+                        class="order-row"
+                        th:attr="data-href=@{/staff/returns/{id}(id=${ret.id})}">
+                        <td class="muted" th:text="${ret.id}">1</td>
+                        <td class="title-cell">
+                            <a class="order-link" th:href="@{/staff/orders/{id}(id=${ret.order.id})}"
+                               th:text="'#' + ${ret.order.id}">#1</a>
+                        </td>
+                        <td th:text="${ret.user.username}">User</td>
+                        <td class="muted"
+                            th:text="${ret.user.phone != null and !#strings.isEmpty(ret.user.phone) ? ret.user.phone : '—'}">—</td>
+                        <td class="no-row-nav" onclick="event.stopPropagation()">
+                            <a th:if="${ret.imagePath != null and !#strings.isEmpty(ret.imagePath)}"
+                               th:href="@{${ret.imagePath}}" target="_blank" rel="noopener">
+                                <img th:src="@{${ret.imagePath}}" alt="Ảnh hoàn trả" class="book-thumb-sm"/>
+                            </a>
+                            <span th:unless="${ret.imagePath != null and !#strings.isEmpty(ret.imagePath)}" class="muted">—</span>
+                        </td>
+                        <td th:text="${ret.reason}">Reason</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${ret.status == 'APPROVED'} ? ' badge-ok' : (${ret.status == 'PENDING'} ? ' badge-pending' : ' badge-muted')"
+                                  th:text="${ret.status == 'PENDING' ? 'Chờ duyệt' : (ret.status == 'APPROVED' ? 'Đã duyệt' : (ret.status == 'REJECTED' ? 'Từ chối' : ret.status))}">PENDING</span>
+                        </td>
+                        <td class="no-row-nav" onclick="event.stopPropagation()">
+                            <div class="actions" th:if="${ret.status == 'PENDING'}">
+                                <form th:if="${perms.contains('RETURN_APPROVE')}"
+                                      th:action="@{/staff/returns/approve}" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${ret.id}"/>
+                                    <button type="submit" class="btn btn-ok btn-sm">Duyệt</button>
+                                </form>
+                                <form th:if="${perms.contains('RETURN_REJECT')}"
+                                      th:action="@{/staff/returns/reject}" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${ret.id}"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                </form>
+                                <span th:if="${!perms.contains('RETURN_APPROVE') and !perms.contains('RETURN_REJECT')}"
+                                      class="muted">Không có quyền</span>
+                            </div>
+                            <span th:if="${ret.status != 'PENDING'}" class="muted">—</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listReturns)}">
+                        <td colspan="8" class="empty">Chưa có yêu cầu hoàn trả nào.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<script>
+document.querySelectorAll('tr.order-row[data-href]').forEach(function (row) {
+  row.addEventListener('click', function (e) {
+    if (e.target.closest('a, button, form, .no-row-nav')) return;
+    window.location = row.getAttribute('data-href');
+  });
+});
+</script>
+</body>
+</html>

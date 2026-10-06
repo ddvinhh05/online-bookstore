@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đơn của tôi')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('orders')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <nav th:replace="~{fragments/layout :: breadcrumb('Đơn của tôi')}"></nav>
+
+        <header class="page-header">
+            <div>
+                <h1>Đơn của tôi</h1>
+                <p>Theo dõi đơn hàng và gửi yêu cầu hoàn trả cho đơn đã giao.</p>
+            </div>
+            <div class="header-actions">
+                <a th:href="@{/shop}" class="btn btn-primary">Tiếp tục mua</a>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Đơn hàng đã đặt</h2>
+                    <p>Đơn <strong>Đã giao</strong> có thể gửi yêu cầu hoàn trả.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${listOrders}">
+                        <td class="title-cell" th:text="'#' + ${order.id}">#1</td>
+                        <td class="muted"
+                            th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm') : '—'}">Date</td>
+                        <td class="price"
+                            th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${order.status == 'DELIVERED' or order.status == 'COMPLETED'} ? ' badge-ok' : (${order.status == 'PENDING'} ? ' badge-pending' : (${order.status == 'CANCELLED'} ? ' badge-muted' : ' badge-pending'))"
+                                  th:text="${statusLabels[order.status] != null ? statusLabels[order.status] : order.status}">Chờ xác nhận</span>
+                        </td>
+                        <td>
+                            <div class="header-actions" style="justify-content:flex-start;gap:0.4rem;">
+                                <form th:if="${order.status == 'PENDING'}"
+                                      th:action="@{/my-orders/cancel}" method="post"
+                                      onsubmit="return confirm('Bạn muốn hủy đơn này?');">
+                                    <input type="hidden" name="id" th:value="${order.id}"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Hủy đơn</button>
+                                </form>
+                                <a th:if="${canReturnMap[order.id] == true}"
+                                   class="btn btn-accent btn-sm"
+                                   th:href="@{/my-orders(returnOrderId=${order.id})}">
+                                    Hoàn trả
+                                </a>
+                                <span th:if="${order.status != 'PENDING' and canReturnMap[order.id] != true}"
+                                      class="muted">—</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listOrders)}">
+                        <td colspan="5" class="empty">Bạn chưa có đơn hàng nào.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" id="return-form">
+            <div class="panel-head">
+                <div>
+                    <h2>Gửi yêu cầu hoàn trả</h2>
+                    <p>Chỉ áp dụng cho đơn <strong>đã giao</strong>. Có thể đính kèm ảnh sản phẩm.</p>
+                </div>
+            </div>
+            <form th:action="@{/my-orders/returns}" method="post" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="field span-4">
+                        <label for="retOrderId">Đơn hàng cần hoàn trả</label>
+                        <select id="retOrderId" name="orderId" required>
+                            <option value="">-- Chọn đơn đã giao --</option>
+                            <option th:each="order : ${listOrders}"
+                                    th:if="${canReturnMap[order.id] == true}"
+                                    th:value="${order.id}"
+                                    th:selected="${returnOrderId != null and returnOrderId == order.id}"
+                                    th:text="'#' + ${order.id} + ' · ' + ${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 0, 'COMMA')} + ' đ'">
+                                #1
+                            </option>
+                        </select>
+                        <p class="muted" style="margin:0.35rem 0 0;font-size:0.82rem;"
+                           th:if="${!hasReturnableOrders}">
+                            Hiện không có đơn nào đủ điều kiện hoàn trả.
+                        </p>
+                    </div>
+                    <div class="field span-6">
+                        <label for="retReason">Lý do hoàn trả</label>
+                        <input id="retReason" type="text" name="reason"
+                               placeholder="Sách bị lỗi, giao sai, thiếu hàng..." required/>
+                    </div>
+                    <div class="field span-4">
+                        <label for="retImage">Ảnh minh chứng (tuỳ chọn)</label>
+                        <input id="retImage" type="file" name="imageFile"
+                               accept="image/jpeg,image/png,image/gif,image/webp"/>
+                    </div>
+                    <div class="field span-4" style="display:flex;align-items:flex-end;">
+                        <button type="submit" class="btn btn-accent"
+                                th:disabled="${!hasReturnableOrders}">
+                            Gửi yêu cầu hoàn trả
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Yêu cầu hoàn trả của tôi</h2>
+                    <p>Theo dõi trạng thái duyệt từ cửa hàng.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mã đơn</th>
+                        <th>Ngày gửi</th>
+                        <th>Ảnh</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="ret : ${listReturns}">
+                        <td class="muted" th:text="${ret.id}">1</td>
+                        <td class="title-cell" th:text="'#' + ${ret.order.id}">#1</td>
+                        <td class="muted"
+                            th:text="${ret.createdAt != null ? #temporals.format(ret.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        <td>
+                            <a th:if="${ret.imagePath != null and !#strings.isEmpty(ret.imagePath)}"
+                               th:href="@{${ret.imagePath}}" target="_blank" rel="noopener">
+                                <img th:src="@{${ret.imagePath}}" alt="Ảnh hoàn trả" class="book-thumb-sm"/>
+                            </a>
+                            <span th:unless="${ret.imagePath != null and !#strings.isEmpty(ret.imagePath)}" class="muted">—</span>
+                        </td>
+                        <td th:text="${ret.reason}">Reason</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${ret.status == 'APPROVED'} ? ' badge-ok' : (${ret.status == 'PENDING'} ? ' badge-pending' : ' badge-muted')"
+                                  th:text="${returnStatusLabels[ret.status] != null ? returnStatusLabels[ret.status] : ret.status}">Chờ duyệt</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listReturns)}">
+                        <td colspan="6" class="empty">Chưa có yêu cầu hoàn trả.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+
+<script th:inline="javascript">
+(function () {
+  var prefill = /*[[${returnOrderId}]]*/ null;
+  if (prefill != null) {
+    var form = document.getElementById('return-form');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+})();
+</script>
+</body>
+</html>

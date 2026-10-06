@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Giỏ hàng')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('cart')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <nav th:replace="~{fragments/layout :: breadcrumb('Giỏ hàng')}"></nav>
+
+        <header class="page-header">
+            <div>
+                <h1>Giỏ hàng</h1>
+                <p>Kiểm tra sản phẩm rồi đặt hàng.</p>
+            </div>
+            <div class="header-actions">
+                <a th:href="@{/shop}" class="btn btn-ghost">← Tiếp tục mua</a>
+            </div>
+        </header>
+
+        <section class="panel" th:if="${#lists.isEmpty(cartItems)}">
+            <p class="empty">Giỏ hàng trống.
+                <a th:href="@{/shop}" style="color:var(--olive-deep);font-weight:650;text-decoration:underline;">Vào cửa hàng</a>
+            </p>
+        </section>
+
+        <section class="panel" th:unless="${#lists.isEmpty(cartItems)}">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Sách</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Thành tiền</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${cartItems}">
+                        <td>
+                            <div class="title-cell" th:text="${item.title}">Tên sách</div>
+                            <div class="muted" th:text="${item.author}">Tác giả</div>
+                        </td>
+                        <td class="price"
+                            th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                        <td>
+                            <form th:action="@{/cart/update}" method="post" class="cart-qty-form">
+                                <input type="hidden" name="bookId" th:value="${item.bookId}"/>
+                                <input type="number" name="quantity" th:value="${item.quantity}" min="1"
+                                       th:attr="max=${item.stockQuantity}" required/>
+                                <button type="submit" class="btn btn-ghost btn-sm">Cập nhật</button>
+                            </form>
+                        </td>
+                        <td class="price"
+                            th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                        <td>
+                            <form th:action="@{/cart/remove}" method="post">
+                                <input type="hidden" name="bookId" th:value="${item.bookId}"/>
+                                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cart-summary">
+                <div class="cart-totals">
+                    <div class="cart-total-row">
+                        <span class="muted">Tạm tính</span>
+                        <span th:text="${#numbers.formatDecimal(cartSubtotal, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+                    </div>
+                    <div class="cart-total-row" th:if="${appliedDiscount != null}">
+                        <span class="muted">Giảm
+                            (<span th:text="${appliedDiscount.code}">CODE</span>
+                            · <span th:text="${appliedDiscount.percentOff}">10</span>%)</span>
+                        <span class="price" style="color:var(--olive-deep);"
+                              th:text="'-' + ${#numbers.formatDecimal(discountAmount, 1, 'POINT', 0, 'COMMA')} + ' đ'">-0 đ</span>
+                    </div>
+                    <div class="cart-total-row cart-total-final">
+                        <span>Tổng cộng</span>
+                        <strong class="price" style="font-size:1.35rem;"
+                                th:text="${#numbers.formatDecimal(cartTotal, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
+                    </div>
+
+                    <form th:if="${appliedDiscount == null}" th:action="@{/cart/coupon}" method="post" class="coupon-form">
+                        <label for="couponCode">Mã giảm giá</label>
+                        <div class="coupon-row">
+                            <input id="couponCode" type="text" name="code" placeholder="VD: SALE10" maxlength="40" required/>
+                            <button type="submit" class="btn btn-ghost">Áp dụng</button>
+                        </div>
+                    </form>
+                    <form th:if="${appliedDiscount != null}" th:action="@{/cart/coupon/remove}" method="post" class="coupon-form">
+                        <p class="muted" style="margin:0 0 0.4rem;font-size:0.88rem;">
+                            Đã áp dụng mã <strong th:text="${appliedDiscount.code}">SALE10</strong>
+                        </p>
+                        <button type="submit" class="btn btn-ghost btn-sm">Bỏ mã</button>
+                    </form>
+                </div>
+
+                <div class="header-actions">
+                    <div th:if="${currentUser == null}" class="alert alert-error" style="margin:0;">
+                        <a th:href="@{/login?redirect=/cart}" style="color:inherit;font-weight:700;text-decoration:underline;">Đăng nhập</a>
+                        để thanh toán.
+                    </div>
+                    <form th:if="${currentUser != null and currentUser.role != 'ADMIN'}"
+                          th:action="@{/cart/checkout}" method="post"
+                          onsubmit="return confirm('Xác nhận đặt hàng toàn bộ giỏ?');">
+                        <button type="submit" class="btn btn-accent">Đặt hàng</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

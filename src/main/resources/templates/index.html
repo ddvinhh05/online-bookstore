@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Trang chủ')}"></head>
+<body>
+<div class="site-shell">
+    <div th:replace="~{fragments/layout :: header('home')}"></div>
+
+    <main class="home-page">
+        <div th:if="${success}" class="alert alert-ok home-flash" th:text="${success}"></div>
+
+        <section class="home-hero" aria-label="Banner Trí Tuệ">
+            <div class="home-hero-media" aria-hidden="true">
+                <img th:src="@{/images/banner-bookstore.jpg}" alt="" width="2000" height="1200"/>
+            </div>
+            <div class="home-hero-veil" aria-hidden="true"></div>
+
+            <div class="home-hero-inner">
+                <div class="home-hero-copy">
+                    <p class="home-brand">Nhà sách Trí Tuệ</p>
+                    <h1>Sách chọn lọc cho mọi tủ sách.</h1>
+                    <p class="lead">Duyệt danh mục, chọn cuốn ưng ý và đặt hàng trong vài phút.</p>
+                    <div class="home-cta">
+                        <a th:href="@{/shop}" class="btn btn-accent">Khám phá ngay →</a>
+                        <a th:href="@{/shop(view='featured')}" class="btn btn-on-dark">Sản phẩm nổi bật</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-trust" aria-label="Cam kết dịch vụ">
+            <div class="home-section-inner home-trust-grid">
+                <article class="home-trust-card">
+                    <div class="home-trust-icon" aria-hidden="true">✔</div>
+                    <div>
+                        <h3>Sách chính hãng</h3>
+                        <p>Nguồn sách rõ ràng, chất lượng đảm bảo.</p>
+                    </div>
+                </article>
+                <article class="home-trust-card">
+                    <div class="home-trust-icon" aria-hidden="true">⚡</div>
+                    <div>
+                        <h3>Giao hàng nhanh</h3>
+                        <p>Xử lý đơn nhanh, theo dõi dễ dàng.</p>
+                    </div>
+                </article>
+                <article class="home-trust-card">
+                    <div class="home-trust-icon" aria-hidden="true">↺</div>
+                    <div>
+                        <h3>Đổi trả dễ dàng</h3>
+                        <p>Hỗ trợ hoàn trả theo quy trình rõ ràng.</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="home-cats" id="categories" th:if="${categories != null and !#lists.isEmpty(categories)}" aria-label="Danh mục nổi bật">
+            <div class="home-section-inner">
+                <div class="home-section-head">
+                    <h2>Danh mục nổi bật</h2>
+                    <p>Tìm sách theo chủ đề bạn yêu thích.</p>
+                </div>
+                <div class="home-cat-cards">
+                    <a th:each="c, stat : ${categories}"
+                       class="home-cat-card"
+                       th:classappend="${stat.index == 0} ? ' is-active'"
+                       th:href="@{/shop(categoryId=${c.id})}">
+                        <div class="home-cat-card-icon" aria-hidden="true">📖</div>
+                        <span th:text="${c.name}">Danh mục</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-featured" id="featured" aria-label="Sản phẩm bán chạy">
+            <div class="home-section-inner">
+                <div class="home-section-head home-section-head-row">
+                    <div>
+                        <h2>Sản phẩm bán chạy</h2>
+                        <p>Những cuốn đang được quan tâm trên kệ Trí Tuệ.</p>
+                    </div>
+                    <a th:href="@{/shop(view='featured')}" class="home-section-more">Xem tất cả →</a>
+                </div>
+
+                <div class="home-featured-grid" th:if="${featuredBooks != null and !#lists.isEmpty(featuredBooks)}">
+                    <article class="home-book" th:each="book : ${featuredBooks}"
+                             th:with="authorName=${book.author != null and !#strings.isEmpty(book.author) and !#strings.equalsIgnoreCase(book.author, 'Admin') ? book.author : ''}">
+                        <a class="home-book-link" th:href="@{/shop/books/{id}(id=${book.id})}">
+                            <div class="home-book-cover">
+                                <div class="home-book-stage">
+                                    <img th:if="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}"
+                                         th:src="@{${book.imagePath}}" th:alt="${book.title}"/>
+                                    <div th:unless="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}"
+                                         class="home-book-placeholder" aria-hidden="true">Trí Tuệ</div>
+                                </div>
+                            </div>
+                            <div class="home-book-body">
+                                <span class="home-book-cat"
+                                      th:text="${book.category != null ? book.category.name : 'Khác'}">Danh mục</span>
+                                <h3 th:text="${book.title}">Tên sách</h3>
+                                <p class="home-book-author"
+                                   th:if="${!#strings.isEmpty(authorName)}"
+                                   th:text="${authorName}">Tác giả</p>
+                                <div class="home-book-price-row">
+                                    <strong class="home-book-price"
+                                            th:text="${book.price != null ? #numbers.formatDecimal(book.price, 1, 'POINT', 0, 'COMMA') + ' ₫' : '—'}">
+                                        150.000 ₫
+                                    </strong>
+                                </div>
+                            </div>
+                        </a>
+                        <form th:if="${(currentUser == null or currentUser.role != 'ADMIN') and book.stockQuantity != null and book.stockQuantity > 0}"
+                              th:action="@{/cart/add}" method="post" class="home-book-buy">
+                            <input type="hidden" name="bookId" th:value="${book.id}"/>
+                            <input type="hidden" name="quantity" value="1"/>
+                            <input type="hidden" name="redirect" value="/"/>
+                            <button type="submit" class="home-book-cart-btn">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M3 5h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 8H7"
+                                          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="10" cy="20" r="1.4" fill="currentColor"/>
+                                    <circle cx="17" cy="20" r="1.4" fill="currentColor"/>
+                                </svg>
+                                Thêm giỏ
+                            </button>
+                        </form>
+                        <p th:if="${book.stockQuantity == null or book.stockQuantity == 0}"
+                           class="home-book-out">Hết hàng</p>
+                    </article>
+                </div>
+
+                <p th:if="${featuredBooks == null or #lists.isEmpty(featuredBooks)}" class="home-empty">
+                    Chưa có sách trên kệ. Quay lại sau khi cửa hàng cập nhật kho.
+                </p>
+            </div>
+        </section>
+
+        <section class="home-banner" aria-label="Lời mời mua sắm">
+            <div class="home-banner-inner">
+                <div class="home-banner-copy">
+                    <h2>Sẵn sàng chọn cuốn tiếp theo?</h2>
+                    <p>Hàng trăm đầu sách, lọc theo danh mục, giao dịch đơn giản.</p>
+                    <a th:href="@{/shop}" class="btn home-banner-btn">Vào cửa hàng</a>
+                </div>
+                <div class="home-banner-art" aria-hidden="true">
+                    <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="46" y="108" width="108" height="10" rx="2" fill="rgba(255,255,255,0.55)"/>
+                        <rect x="52" y="92" width="96" height="10" rx="2" fill="rgba(255,255,255,0.42)"/>
+                        <rect x="58" y="76" width="84" height="10" rx="2" fill="rgba(255,255,255,0.5)"/>
+                        <rect x="64" y="60" width="72" height="10" rx="2" fill="rgba(255,255,255,0.38)"/>
+                        <rect x="70" y="44" width="60" height="10" rx="2" fill="rgba(255,255,255,0.48)"/>
+                        <ellipse cx="100" cy="132" rx="58" ry="5" fill="rgba(26,26,26,0.08)"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

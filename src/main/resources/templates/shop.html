@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${pageTitle})}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header(${activeNav})}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <nav th:replace="~{fragments/layout :: breadcrumb(${breadcrumb})}"></nav>
+
+        <header class="page-header">
+            <div>
+                <h1 th:text="${pageTitle}">Tất cả sản phẩm</h1>
+                <p th:text="${pageLead}">Tìm theo tên hoặc danh mục — bấm vào sách để xem chi tiết.</p>
+            </div>
+        </header>
+
+        <form class="search-bar" th:action="@{/shop}" method="get" th:if="${view == null or view == 'all'}">
+            <input type="search" name="q" th:value="${q}" placeholder="Tìm theo tên sách, tác giả..." />
+            <select name="categoryId" class="search-select">
+                <option value="">Tất cả danh mục</option>
+                <option th:each="c : ${categories}"
+                        th:value="${c.id}"
+                        th:text="${c.name}"
+                        th:selected="${categoryId != null and categoryId == c.id}">Danh mục</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a th:if="${(q != null and !#strings.isEmpty(q) ) or categoryId != null}"
+               th:href="@{/shop}" class="btn btn-ghost">Xóa lọc</a>
+        </form>
+
+        <div th:if="${currentUser != null and currentUser.role == 'ADMIN'}" class="alert alert-error" style="margin-bottom:1rem;">
+            Bạn đang đăng nhập <strong>admin</strong>. Dùng tài khoản khách để thêm giỏ / đặt hàng.
+        </div>
+
+        <section class="shop-grid">
+            <article class="shop-card" th:each="book : ${listBooks}"
+                     th:with="stock=${book.stockQuantity != null ? book.stockQuantity : 0}">
+                <a class="shop-card-link" th:href="@{/shop/books/{id}(id=${book.id})}">
+                    <div class="shop-card-media">
+                        <img th:if="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}"
+                             th:src="@{${book.imagePath}}" th:alt="${book.title}"/>
+                        <div th:unless="${book.imagePath != null and !#strings.isEmpty(book.imagePath)}"
+                             class="shop-card-placeholder" aria-hidden="true">Trí Tuệ</div>
+                    </div>
+
+                    <div class="shop-card-body">
+                        <span class="shop-card-cat"
+                              th:text="${book.category != null ? book.category.name : 'Khác'}">Danh mục</span>
+                        <h2 th:text="${book.title}">Tên sách</h2>
+                        <div class="shop-card-meta">
+                            <strong class="shop-card-price"
+                                    th:text="${book.price != null ? #numbers.formatDecimal(book.price, 1, 'POINT', 0, 'COMMA') + ' đ' : '—'}">0 đ</strong>
+                            <span class="shop-stock"
+                                  th:classappend="${stock <= 0} ? ' is-out'"
+                                  th:text="${stock <= 0} ? 'Hết hàng' : ('Còn ' + stock)">Còn 0</span>
+                        </div>
+                    </div>
+                </a>
+
+                <form th:if="${(currentUser == null or currentUser.role != 'ADMIN') and stock > 0}"
+                      th:action="@{/cart/add}" method="post" class="shop-card-actions">
+                    <input type="hidden" name="bookId" th:value="${book.id}"/>
+                    <input type="hidden" name="redirect"
+                           th:value="${view == 'featured' ? '/shop?view=featured' : (view == 'new' ? '/shop?view=new' : '/shop')}"/>
+                    <div class="shop-qty" aria-label="Số lượng">
+                        <button type="button" class="shop-qty-btn" data-delta="-1" aria-label="Giảm">−</button>
+                        <input type="number" name="quantity" value="1" min="1" th:max="${stock}" required/>
+                        <button type="button" class="shop-qty-btn" data-delta="1" aria-label="Tăng">+</button>
+                    </div>
+                    <button type="submit" class="shop-cart-btn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3 5h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 8H7"
+                                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="10" cy="20" r="1.4" fill="currentColor"/>
+                            <circle cx="17" cy="20" r="1.4" fill="currentColor"/>
+                        </svg>
+                        Thêm
+                    </button>
+                </form>
+            </article>
+        </section>
+
+        <p th:if="${listBooks == null or #lists.isEmpty(listBooks)}" class="empty" style="margin-top:1rem;">
+            Không có sách phù hợp.
+        </p>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+
+<script>
+  document.querySelectorAll('.shop-qty').forEach(function (wrap) {
+    var input = wrap.querySelector('input[type="number"]');
+    if (!input) return;
+    wrap.querySelectorAll('.shop-qty-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var delta = parseInt(btn.getAttribute('data-delta'), 10) || 0;
+        var min = parseInt(input.min || '1', 10);
+        var max = parseInt(input.max || '999', 10);
+        var next = (parseInt(input.value || '1', 10) || 1) + delta;
+        if (next < min) next = min;
+        if (next > max) next = max;
+        input.value = next;
+      });
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tài khoản')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('account')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <nav th:replace="~{fragments/layout :: breadcrumb('Tài khoản')}"></nav>
+
+        <header class="page-header">
+            <div>
+                <h1>Tài khoản</h1>
+                <p>Xem và chỉnh sửa thông tin của bạn.</p>
+            </div>
+            <a th:href="@{/logout}" class="btn btn-ghost">Đăng xuất</a>
+        </header>
+
+        <section class="panel" style="max-width:720px;">
+            <div class="panel-head">
+                <div>
+                    <h2 th:text="${user.fullName}">Họ tên</h2>
+                    <p>
+                        <span class="muted">Username:</span>
+                        <strong th:text="${user.username}">user</strong>
+                        ·
+                        <span class="badge"
+                              th:classappend="${user.role == 'ADMIN'} ? ' badge-ok' : (${user.role == 'STAFF'} ? ' badge-pending' : ' badge-muted')"
+                              th:text="${roleLabel}">Khách hàng</span>
+                    </p>
+                </div>
+            </div>
+
+            <form th:action="@{/account}" method="post" style="padding:0 1.25rem 1.25rem;">
+                <div class="form-grid">
+                    <div class="field span-6">
+                        <label for="username">Tên đăng nhập</label>
+                        <input id="username" type="text" th:value="${user.username}" disabled/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="role">Loại tài khoản</label>
+                        <input id="role" type="text" th:value="${roleLabel}" disabled/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="fullName">Họ và tên *</label>
+                        <input id="fullName" type="text" name="fullName" th:value="${user.fullName}"
+                               required maxlength="100"/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="email">Email</label>
+                        <input id="email" type="email" name="email" th:value="${user.email}" maxlength="100"/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="phone">Số điện thoại</label>
+                        <input id="phone" type="text" name="phone" th:value="${user.phone}" maxlength="15"/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="address">Địa chỉ</label>
+                        <input id="address" type="text" name="address" th:value="${user.address}"/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="currentPassword">Mật khẩu cũ</label>
+                        <input id="currentPassword" type="password" name="currentPassword"
+                               placeholder="Bắt buộc nếu đổi mật khẩu"/>
+                    </div>
+                    <div class="field span-6">
+                        <label for="newPassword">Mật khẩu mới</label>
+                        <input id="newPassword" type="password" name="newPassword"
+                               placeholder="Để trống nếu không đổi"/>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

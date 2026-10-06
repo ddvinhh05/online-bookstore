@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng nhập')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('login')}"></nav>
+
+    <main class="page">
+        <nav th:replace="~{fragments/layout :: breadcrumb('Đăng nhập')}"></nav>
+
+        <div class="auth-wrap">
+            <section class="panel auth-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Đăng nhập</h2>
+                        <p>Vào tài khoản Trí Tuệ để quản lý kho và đơn hàng.</p>
+                    </div>
+                </div>
+
+                <div th:if="${success}" class="alert alert-ok" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+                <form th:action="@{/login}" method="post">
+                    <input type="hidden" name="redirect" th:value="${redirect}"/>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="username">Tên đăng nhập</label>
+                            <input id="username" type="text" name="username" required autofocus
+                                   placeholder="Nhập username"/>
+                        </div>
+                        <div class="field">
+                            <label for="password">Mật khẩu</label>
+                            <input id="password" type="password" name="password" required
+                                   placeholder="Nhập mật khẩu"/>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="justify-content: stretch;">
+                        <button type="submit" class="btn btn-primary" style="width:100%;">Đăng nhập</button>
+                    </div>
+                </form>
+
+                <p class="auth-switch">
+                    Chưa có tài khoản?
+                    <a th:href="@{/register}">Đăng ký ngay</a>
+                </p>
+                <p class="auth-switch" style="margin-top:0.65rem;font-size:0.82rem;">
+                    Admin: <strong>admin</strong> / <strong>admin123</strong><br>
+                    Staff: <strong>staff</strong> / <strong>staff123</strong>
+                </p>
+            </section>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

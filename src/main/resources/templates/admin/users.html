@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Phân quyền')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('users')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+
+        <header class="page-header">
+            <div>
+                <h1>Phân quyền tài khoản</h1>
+                <p>Chỉ quản lý tài khoản <strong>STAFF</strong> — tick chức năng được phép.</p>
+            </div>
+            <a th:href="@{/admin/staff}" class="btn btn-accent">Quản lý nhân viên</a>
+        </header>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Danh sách nhân viên (STAFF)</h2>
+                    <p>Admin và khách hàng không hiện ở đây.</p>
+                </div>
+            </div>
+
+            <div class="perm-list">
+                <article class="perm-card" th:each="u : ${listUsers}">
+                    <div class="perm-card-head">
+                        <div>
+                            <strong class="title-cell" th:text="${u.username}">user</strong>
+                            <span class="muted" th:text="' · ' + ${u.fullName}"> · Họ tên</span>
+                        </div>
+                        <span class="badge"
+                              th:classappend="${u.role == 'ADMIN'} ? ' badge-ok' : (${u.role == 'STAFF'} ? ' badge-pending' : ' badge-muted')"
+                              th:text="${roleLabels[u.role] != null ? roleLabels[u.role] : u.role}">Khách hàng</span>
+                    </div>
+
+                    <form th:action="@{/admin/users/role}" method="post" class="perm-form" data-perm-form>
+                        <input type="hidden" name="id" th:value="${u.id}"/>
+
+                        <div class="field">
+                            <label>Role</label>
+                            <select name="role" required class="perm-select" data-role-select>
+                                <option value="USER" th:selected="${u.role == 'USER'}">USER — Khách hàng</option>
+                                <option value="STAFF" th:selected="${u.role == 'STAFF'}">STAFF — Nhân viên</option>
+                                <option value="ADMIN" th:selected="${u.role == 'ADMIN'}">ADMIN — Quản trị</option>
+                            </select>
+                        </div>
+
+                        <!-- Chỉ hiện tick khi đang là STAFF; JS cũng ẩn khi đổi sang USER/ADMIN -->
+                        <div class="field staff-perms" data-staff-perms
+                             th:style="${u.role != 'STAFF'} ? 'display:none' : ''">
+                            <label>Chức năng nhân viên</label>
+                            <div class="perm-checks">
+                                <label class="perm-check" th:each="entry : ${staffPermissionLabels}">
+                                    <input type="checkbox" name="permissions" th:value="${entry.key}"
+                                           th:checked="${u.role == 'STAFF' and userPerms[u.id] != null and userPerms[u.id].contains(entry.key)}"/>
+                                    <span th:text="${entry.value}">Chức năng</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Lưu quyền</button>
+                        </div>
+                    </form>
+                </article>
+
+                <p th:if="${#lists.isEmpty(listUsers)}" class="empty">Chưa có tài khoản STAFF. Tạo ở Quản lý nhân viên.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<script>
+    document.querySelectorAll('[data-perm-form]').forEach(function (form) {
+        var select = form.querySelector('[data-role-select]');
+        var perms = form.querySelector('[data-staff-perms]');
+        if (!select || !perms) return;
+        function sync() {
+            var isStaff = select.value === 'STAFF';
+            perms.style.display = isStaff ? '' : 'none';
+            perms.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+                if (!isStaff) {
+                    cb.checked = false;
+                    cb.disabled = true;
+                } else {
+                    cb.disabled = false;
+                }
+            });
+        }
+        select.addEventListener('change', sync);
+        sync();
+    });
+</script>
+</body>
+</html>

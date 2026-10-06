@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Doanh thu')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('revenue')}"></nav>
+    <main class="page">
+        <header class="page-header">
+            <div>
+                <h1>Doanh thu</h1>
+                <p>Chỉ tính đơn đã giao. Đơn hủy và hoàn trả xem riêng bên dưới.</p>
+            </div>
+        </header>
+
+        <div class="rev-stats">
+            <article class="rev-stat">
+                <p>Tổng doanh thu</p>
+                <strong>
+                    <span th:text="${totalRevenue != null ? #numbers.formatDecimal(totalRevenue, 1, 'POINT', 0, 'COMMA') : 0}">0</span>
+                    <em>đ</em>
+                </strong>
+            </article>
+            <article class="rev-stat">
+                <p>7 ngày gần đây</p>
+                <strong>
+                    <span th:text="${last7DaysRevenue != null ? #numbers.formatDecimal(last7DaysRevenue, 1, 'POINT', 0, 'COMMA') : 0}">0</span>
+                    <em>đ</em>
+                </strong>
+            </article>
+            <article class="rev-stat">
+                <p>Đơn đã hủy</p>
+                <strong th:text="${cancelledCount}">0</strong>
+                <span class="rev-note"
+                      th:text="${cancelledAmount != null ? #numbers.formatDecimal(cancelledAmount, 1, 'POINT', 0, 'COMMA') + ' đ' : '0 đ'}">0 đ</span>
+            </article>
+            <article class="rev-stat">
+                <p>Hoàn trả đã duyệt</p>
+                <strong th:text="${approvedReturnCount}">0</strong>
+                <span class="rev-note"
+                      th:text="${(pendingReturnCount != null ? pendingReturnCount : 0) + ' chờ duyệt · '
+                          + (approvedReturnAmount != null ? #numbers.formatDecimal(approvedReturnAmount, 1, 'POINT', 0, 'COMMA') + ' đ' : '0 đ')}">0 chờ duyệt</span>
+            </article>
+        </div>
+
+        <section class="rev-chart">
+            <h2>7 ngày gần đây</h2>
+            <div class="rev-bars" th:if="${chartData != null and !#lists.isEmpty(chartData)}">
+                <div class="rev-col" th:each="row : ${chartData}">
+                    <span class="rev-amount"
+                          th:if="${row.revenue != null and row.revenue > 0}"
+                          th:text="${#numbers.formatDecimal(row.revenue, 1, 'POINT', 0, 'COMMA')}">0</span>
+                    <div class="rev-track">
+                        <div class="rev-fill"
+                             th:style="${chartMax != null and chartMax > 0 and row.revenue != null
+                                 ? 'height:' + ((row.revenue * 100) / chartMax) + '%'
+                                 : 'height:0'}"></div>
+                    </div>
+                    <span class="rev-label" th:text="${row.label}">—</span>
+                </div>
+            </div>
+            <p class="empty" th:if="${chartData == null or #lists.isEmpty(chartData)}">Chưa có dữ liệu.</p>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Nhân viên')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('home')}"></nav>
+
+    <main class="page">
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+
+        <section class="home-hero">
+            <h1 class="brand-mark">Staff</h1>
+            <p class="lead">Khu vực nhân viên — xác nhận đơn, cập nhật vận chuyển và duyệt hoàn trả.</p>
+            <div class="home-cta">
+                <a th:href="@{/staff/orders}" class="btn btn-accent">Xử lý đơn hàng</a>
+            </div>
+        </section>
+
+        <section class="home-grid" aria-label="Công việc" style="grid-template-columns: 1fr;">
+            <a th:href="@{/staff/orders}" class="home-link">
+                <h2>Đơn hàng &amp; hoàn trả</h2>
+                <p>Chuyển trạng thái: Chờ xác nhận → Đã xác nhận → Đang vận chuyển → Đã giao.</p>
+                <span class="meta">Vào xử lý →</span>
+            </a>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

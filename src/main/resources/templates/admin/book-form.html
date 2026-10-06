@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thông tin sách')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('books')}"></nav>
+
+    <main class="page">
+        <div th:if="${error}" class="alert alert-error" th:text="${error}" style="margin-bottom:1rem;"></div>
+        <div th:if="${success}" class="alert alert-ok" th:text="${success}" style="margin-bottom:1rem;"></div>
+
+        <header class="page-header">
+            <div>
+                <h1 th:text="${book.id != null} ? 'Sửa thông tin sách' : 'Thêm sách mới'">Thông tin sách</h1>
+                <p>Điền đầy đủ thông tin để cập nhật kho. Có thể chọn nhiều ảnh cùng lúc.</p>
+            </div>
+            <div class="header-actions">
+                <a th:href="@{/admin/books}" class="btn btn-ghost">← Quay lại kho</a>
+            </div>
+        </header>
+
+        <section class="panel form-narrow" th:if="${book.id != null}">
+            <div class="panel-head">
+                <div>
+                    <h2>Ảnh hiện có</h2>
+                    <p>Đặt bìa hoặc xóa từng ảnh bên dưới.</p>
+                </div>
+            </div>
+
+            <div class="book-image-gallery" th:if="${bookImages != null and !#lists.isEmpty(bookImages)}">
+                <div class="book-image-item" th:each="img : ${bookImages}">
+                    <img th:src="@{${img.imagePath}}" alt="Ảnh sách"/>
+                    <span class="book-image-badge" th:if="${book.imagePath == img.imagePath}">Bìa</span>
+                    <div class="book-image-actions">
+                        <form th:action="@{/admin/books/{bookId}/images/{imageId}/cover(bookId=${book.id},imageId=${img.id})}"
+                              method="post">
+                            <button type="submit" class="btn btn-ghost"
+                                    th:disabled="${book.imagePath == img.imagePath}">Đặt bìa</button>
+                        </form>
+                        <form th:action="@{/admin/books/{bookId}/images/{imageId}/delete(bookId=${book.id},imageId=${img.id})}"
+                              method="post"
+                              onsubmit="return confirm('Xóa ảnh này?');">
+                            <button type="submit" class="btn btn-ghost">Xóa</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <p class="muted" th:if="${bookImages == null or #lists.isEmpty(bookImages)}"
+               style="padding:0 1.25rem 1.25rem;">Chưa có ảnh trong gallery. Thêm ảnh ở form bên dưới rồi bấm Lưu.</p>
+        </section>
+
+        <section class="panel form-narrow" th:style="${book.id != null} ? 'margin-top:1rem;' : ''">
+            <form th:action="@{/admin/books/save}" th:object="${book}" method="post"
+                  enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}"/>
+                <input type="hidden" th:field="*{imagePath}"/>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="title">Tên sách</label>
+                        <input id="title" type="text" th:field="*{title}" required placeholder="Ví dụ: Đắc nhân tâm"/>
+                    </div>
+
+                    <div class="field span-6">
+                        <label for="author">Tác giả</label>
+                        <input id="author" type="text" th:field="*{author}" required placeholder="Tên tác giả"/>
+                    </div>
+
+                    <div class="field span-6">
+                        <label for="category">Danh mục</label>
+                        <select id="category" th:field="*{category.id}" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            <option th:each="cat : ${listCategories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                        </select>
+                        <p style="margin:0.35rem 0 0;font-size:0.82rem;color:var(--muted);">
+                            Chưa có danh mục?
+                            <a th:href="@{/admin/categories}" style="color:var(--olive-deep);font-weight:650;text-decoration:underline;">Thêm danh mục</a>
+                        </p>
+                    </div>
+
+                    <div class="field span-6">
+                        <label for="price">Giá bán (VNĐ)</label>
+                        <input id="price" type="number" step="any" th:field="*{price}" required placeholder="150000"/>
+                    </div>
+
+                    <div class="field span-6">
+                        <label for="stock">Số lượng tồn kho</label>
+                        <input id="stock" type="number" th:field="*{stockQuantity}" required placeholder="20" min="0"/>
+                    </div>
+
+                    <div class="field">
+                        <label for="imageFiles">Thêm ảnh (nhiều ảnh)</label>
+                        <input id="imageFiles" type="file" name="imageFiles" multiple
+                               accept="image/jpeg,image/png,image/gif,image/webp"/>
+                        <p class="muted" style="margin:0.35rem 0 0;font-size:0.82rem;">
+                            Chọn nhiều file cùng lúc (Ctrl/Cmd + click). Tối đa 8 ảnh/sách. JPG, PNG, GIF, WEBP.
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <label for="description">Mô tả</label>
+                        <textarea id="description" th:field="*{description}" rows="4" placeholder="Tóm tắt nội dung, ghi chú kho..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/admin/books}" class="btn btn-ghost">Hủy</a>
+                    <button type="submit" class="btn btn-primary">Lưu sách</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

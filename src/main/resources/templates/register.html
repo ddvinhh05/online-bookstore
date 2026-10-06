@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng ký')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('register')}"></nav>
+
+    <main class="page">
+        <nav th:replace="~{fragments/layout :: breadcrumb('Đăng ký')}"></nav>
+
+        <div class="auth-wrap">
+            <section class="panel auth-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Đăng ký tài khoản</h2>
+                        <p>Tạo tài khoản mới để mua sách và gửi yêu cầu hoàn trả.</p>
+                    </div>
+                </div>
+
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+                <form th:action="@{/register}" th:object="${user}" method="post">
+                    <div class="form-grid">
+                        <div class="field span-6">
+                            <label for="username">Tên đăng nhập *</label>
+                            <input id="username" type="text" th:field="*{username}" required
+                                   maxlength="50" placeholder="vd: nguyenvana"/>
+                        </div>
+                        <div class="field span-6">
+                            <label for="fullName">Họ và tên *</label>
+                            <input id="fullName" type="text" th:field="*{fullName}" required
+                                   maxlength="100" placeholder="Nguyễn Văn A"/>
+                        </div>
+                        <div class="field span-6">
+                            <label for="password">Mật khẩu *</label>
+                            <input id="password" type="password" th:field="*{password}" required
+                                   placeholder="Tối thiểu vài ký tự"/>
+                        </div>
+                        <div class="field span-6">
+                            <label for="confirmPassword">Xác nhận mật khẩu *</label>
+                            <input id="confirmPassword" type="password" name="confirmPassword" required
+                                   placeholder="Nhập lại mật khẩu"/>
+                        </div>
+                        <div class="field span-6">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" th:field="*{email}"
+                                   maxlength="100" placeholder="email@example.com"/>
+                        </div>
+                        <div class="field span-6">
+                            <label for="phone">Số điện thoại</label>
+                            <input id="phone" type="text" th:field="*{phone}"
+                                   maxlength="15" placeholder="09xxxxxxxx"/>
+                        </div>
+                        <div class="field">
+                            <label for="address">Địa chỉ</label>
+                            <textarea id="address" th:field="*{address}" rows="2"
+                                      placeholder="Địa chỉ nhận hàng (không bắt buộc)"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="justify-content: stretch;">
+                        <button type="submit" class="btn btn-primary" style="width:100%;">Tạo tài khoản</button>
+                    </div>
+                </form>
+
+                <p class="auth-switch">
+                    Đã có tài khoản?
+                    <a th:href="@{/login}">Đăng nhập</a>
+                </p>
+            </section>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

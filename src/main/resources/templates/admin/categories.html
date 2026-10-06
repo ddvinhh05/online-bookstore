@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Danh mục')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('categories')}"></nav>
+
+    <main class="page">
+        <header class="page-header">
+            <div>
+                <h1>Danh mục sản phẩm</h1>
+                <p>Thêm và quản lý danh mục để phân loại sách trong kho.</p>
+            </div>
+            <div class="header-actions">
+                <a th:href="@{/admin/books}" class="btn btn-ghost">← Kho sách</a>
+            </div>
+        </header>
+
+        <section class="panel form-narrow">
+            <div class="panel-head">
+                <div>
+                    <h2 th:text="${category.id != null} ? 'Sửa danh mục' : 'Thêm danh mục mới'">Thêm danh mục</h2>
+                    <p th:if="${category.id == null}">Nhập tên danh mục rồi lưu để dùng khi thêm sách.</p>
+                    <p th:if="${category.id != null}">Cập nhật thông tin danh mục đang chọn.</p>
+                </div>
+            </div>
+            <form th:action="@{/admin/categories/save}" th:object="${category}" method="post">
+                <input type="hidden" th:field="*{id}"/>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="name">Tên danh mục</label>
+                        <input id="name" type="text" th:field="*{name}" required
+                               placeholder="Ví dụ: Văn học, Kinh tế, Thiếu nhi..."/>
+                    </div>
+                    <div class="field">
+                        <label for="description">Mô tả</label>
+                        <textarea id="description" th:field="*{description}" rows="3"
+                                  placeholder="Ghi chú ngắn về danh mục (không bắt buộc)"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a th:if="${category.id != null}" th:href="@{/admin/categories}" class="btn btn-ghost">Hủy</a>
+                    <button type="submit" class="btn btn-primary"
+                            th:text="${category.id != null} ? 'Cập nhật' : 'Thêm danh mục'">Thêm danh mục</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Danh sách danh mục</h2>
+                    <p>Các danh mục hiện có trong hệ thống.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên danh mục</th>
+                        <th>Mô tả</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="cat : ${listCategories}">
+                        <td class="muted" th:text="${cat.id}">1</td>
+                        <td class="title-cell" th:text="${cat.name}">Tên</td>
+                        <td class="muted"
+                            th:text="${cat.description != null and !#strings.isEmpty(cat.description) ? cat.description : '—'}">Mô tả</td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/admin/categories/edit/{id}(id=${cat.id})}" class="btn btn-ghost btn-sm">Sửa</a>
+                                <a th:href="@{/admin/categories/delete/{id}(id=${cat.id})}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Xóa danh mục này? Sách đang gắn danh mục có thể bị ảnh hưởng.');">Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(listCategories)}">
+                        <td colspan="4" class="empty">Chưa có danh mục nào. Hãy thêm danh mục đầu tiên ở trên.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

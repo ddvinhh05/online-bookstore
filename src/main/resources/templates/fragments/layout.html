@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Trí Tuệ'">Trí Tuệ</title>
+    <link rel="stylesheet" th:href="@{/css/app.css(v=4)}">
+</head>
+
+<body>
+<th:block th:fragment="header(active)">
+
+    <!-- Khách hàng / chưa login -->
+    <header th:if="${currentUser == null or (currentUser.role != 'ADMIN' and currentUser.role != 'STAFF')}"
+            class="store-header">
+        <div class="store-header-inner">
+            <div class="store-header-top">
+                <a th:href="@{/}" class="brand store-brand">Trí Tuệ <span>Bookstore</span></a>
+
+                <form class="store-search" th:action="@{/shop}" method="get" role="search">
+                    <input type="search" name="q" placeholder="Tìm sách, tác giả, danh mục..." aria-label="Tìm kiếm"/>
+                    <button type="submit" aria-label="Tìm kiếm">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                            <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="store-utils">
+                    <a th:href="@{/cart}" class="store-util" th:classappend="${active == 'cart'} ? ' is-active'">
+                        <span class="store-util-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M3 5h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 8H7"
+                                      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="10" cy="20" r="1.3" fill="currentColor"/>
+                                <circle cx="17" cy="20" r="1.3" fill="currentColor"/>
+                            </svg>
+                            <em th:if="${cartCount != null and cartCount > 0}" class="cart-badge" th:text="${cartCount}">0</em>
+                        </span>
+                        <span>Giỏ hàng</span>
+                    </a>
+                    <a th:href="@{/my-orders}" class="store-util" th:classappend="${active == 'orders'} ? ' is-active'">
+                        <span class="store-util-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/>
+                            </svg>
+                        </span>
+                        <span>Đơn hàng</span>
+                    </a>
+                    <th:block th:if="${currentUser == null}">
+                        <a th:href="@{/login}" class="store-util store-util-cta"
+                           th:classappend="${active == 'login' or active == 'register'} ? ' is-active'">
+                            <span class="store-util-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M5 19c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span>Đăng nhập</span>
+                        </a>
+                    </th:block>
+                    <th:block th:if="${currentUser != null}">
+                        <a th:href="@{/account}" class="store-util store-util-user"
+                           th:classappend="${active == 'account'} ? ' is-active'">
+                            <span class="store-avatar"
+                                  th:text="${currentUser.fullName != null and !#strings.isEmpty(currentUser.fullName) ? #strings.substring(currentUser.fullName,0,1) : (currentUser.username != null ? #strings.substring(currentUser.username,0,1) : 'U')}">U</span>
+                            <span class="store-util-user-text">
+                                <em>Tài khoản</em>
+                                <strong th:text="${currentUser.fullName != null and !#strings.isEmpty(currentUser.fullName) ? currentUser.fullName : currentUser.username}">Tên</strong>
+                            </span>
+                        </a>
+                    </th:block>
+                </div>
+            </div>
+
+            <nav class="store-header-nav" aria-label="Điều hướng khách hàng">
+                <a th:href="@{/}" th:classappend="${active == 'home'} ? 'is-active'">Trang chủ</a>
+                <a th:href="@{/shop}" th:classappend="${active == 'shop'} ? 'is-active'">Tất cả sản phẩm</a>
+                <a th:href="@{/shop(view='featured')}" th:classappend="${active == 'featured'} ? 'is-active'">Sản phẩm nổi bật</a>
+                <a th:href="@{/categories}" th:classappend="${active == 'categories'} ? 'is-active'">Danh mục</a>
+                <a th:href="@{/shop(view='new')}" th:classappend="${active == 'new'} ? 'is-active'">Sách mới</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Staff -->
+    <nav th:if="${currentUser != null and currentUser.role == 'STAFF'}"
+         class="site-nav admin-nav" aria-label="Điều hướng nhân viên">
+        <a th:href="@{/staff}" class="brand">Trí Tuệ <span>Staff</span></a>
+        <div class="nav-links">
+            <a th:href="@{/staff}" th:classappend="${active == 'home'} ? 'is-active'">Tổng quan</a>
+            <a th:href="@{/staff/orders}" th:classappend="${active == 'orders'} ? 'is-active'">Xử lý đơn</a>
+            <a th:href="@{/account}"
+               th:classappend="${active == 'account'} ? ' is-active'"
+               class="nav-cta">Tài khoản</a>
+        </div>
+    </nav>
+
+    <!-- Admin -->
+    <nav th:if="${currentUser != null and currentUser.role == 'ADMIN'}"
+         class="site-nav admin-nav" aria-label="Điều hướng quản trị">
+        <a th:href="@{/admin}" class="brand">Trí Tuệ <span>Admin</span></a>
+        <div class="nav-links">
+            <a th:href="@{/admin}" th:classappend="${active == 'home'} ? 'is-active'">Tổng quan</a>
+            <a th:href="@{/admin/books}" th:classappend="${active == 'books'} ? 'is-active'">Kho sách</a>
+            <a th:href="@{/admin/categories}" th:classappend="${active == 'categories'} ? 'is-active'">Danh mục</a>
+            <a th:href="@{/admin/orders}" th:classappend="${active == 'orders'} ? 'is-active'">Đơn &amp; hoàn trả</a>
+            <a th:href="@{/admin/discounts}" th:classappend="${active == 'discounts'} ? 'is-active'">Mã giảm giá</a>
+            <a th:href="@{/admin/revenue}" th:classappend="${active == 'revenue'} ? 'is-active'">Doanh thu</a>
+            <a th:href="@{/admin/staff}" th:classappend="${active == 'staff'} ? 'is-active'">Nhân viên</a>
+            <a th:href="@{/account}"
+               th:classappend="${active == 'account'} ? ' is-active'"
+               class="nav-cta">Tài khoản</a>
+        </div>
+    </nav>
+
+</th:block>
+
+<nav th:fragment="breadcrumb(current)" class="store-breadcrumb" aria-label="Đường dẫn">
+    <a th:href="@{/}">Trang chủ</a>
+    <span class="store-breadcrumb-sep" aria-hidden="true">›</span>
+    <span class="store-breadcrumb-current" th:text="${current}">Trang</span>
+</nav>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="site-footer-inner">
+        <div class="site-footer-grid">
+            <div class="footer-col footer-brand-col">
+                <a th:href="@{/}" class="footer-logo">Trí Tuệ</a>
+                <p>Nhà sách trực tuyến tuyển chọn, mang đến tri thức cho mọi nhà.</p>
+            </div>
+
+            <div class="footer-col">
+                <h3>Cửa hàng</h3>
+                <ul>
+                    <li><a th:href="@{/shop}">Tất cả sản phẩm</a></li>
+                    <li><a th:href="@{/shop(view='new')}">Sách mới</a></li>
+                    <li><a th:href="@{/shop(view='featured')}">Sản phẩm nổi bật</a></li>
+                    <li><a th:href="@{/categories}">Danh mục</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Tài khoản</h3>
+                <ul>
+                    <li><a th:href="@{/cart}">Giỏ hàng</a></li>
+                    <li><a th:href="@{/my-orders}">Đơn của tôi</a></li>
+                    <li><a th:href="@{/account}">Tài khoản</a></li>
+                    <li><a th:href="@{/login}">Đăng nhập</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Liên hệ</h3>
+                <ul class="footer-contact">
+                    <li>Hà Nội, Việt Nam</li>
+                    <li>(+84) 24 1234 5678</li>
+                    <li>hello@tritue.bookstore</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="site-footer-copy">
+            © 2026 Trí Tuệ Bookstore. All rights reserved.
+        </div>
+    </div>
+</footer>
+</body>
+</html>

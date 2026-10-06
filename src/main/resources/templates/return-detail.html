@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chi tiết hoàn trả')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('orders')}"></nav>
+
+    <main class="page">
+        <header class="page-header">
+            <div>
+                <h1 th:text="'Hoàn trả #' + ${ret.id}">Hoàn trả #1</h1>
+                <p>Chi tiết yêu cầu hoàn trả và đơn hàng liên quan.</p>
+            </div>
+            <a class="btn btn-ghost" th:href="@{${backUrl}}">← Quay lại</a>
+        </header>
+
+        <section class="panel order-detail-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Thông tin yêu cầu</h2>
+                    <p th:text="${ret.createdAt != null ? #temporals.format(ret.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">
+                        Ngày gửi
+                    </p>
+                </div>
+                <span class="badge"
+                      th:classappend="${ret.status == 'APPROVED'} ? ' badge-ok' : (${ret.status == 'PENDING'} ? ' badge-pending' : ' badge-muted')"
+                      th:text="${statusLabel}">Chờ duyệt</span>
+            </div>
+
+            <div class="order-detail-grid">
+                <div class="order-detail-block">
+                    <h3>Khách hàng</h3>
+                    <dl class="order-detail-dl" th:if="${ret.user != null}">
+                        <div>
+                            <dt>Họ tên</dt>
+                            <dd th:text="${ret.user.fullName != null ? ret.user.fullName : '—'}">—</dd>
+                        </div>
+                        <div>
+                            <dt>Tài khoản</dt>
+                            <dd th:text="${ret.user.username}">user</dd>
+                        </div>
+                        <div>
+                            <dt>Email</dt>
+                            <dd th:text="${ret.user.email != null and !#strings.isEmpty(ret.user.email) ? ret.user.email : '—'}">—</dd>
+                        </div>
+                        <div>
+                            <dt>SĐT</dt>
+                            <dd th:text="${ret.user.phone != null and !#strings.isEmpty(ret.user.phone) ? ret.user.phone : '—'}">—</dd>
+                        </div>
+                        <div>
+                            <dt>Địa chỉ</dt>
+                            <dd th:text="${ret.user.address != null and !#strings.isEmpty(ret.user.address) ? ret.user.address : '—'}">—</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="order-detail-block">
+                    <h3>Đơn liên quan</h3>
+                    <dl class="order-detail-dl" th:if="${ret.order != null}">
+                        <div>
+                            <dt>Mã đơn</dt>
+                            <dd>
+                                <a class="order-link" th:if="${orderDetailUrl != null}"
+                                   th:href="@{${orderDetailUrl}}"
+                                   th:text="'#' + ${ret.order.id}">#1</a>
+                                <span th:unless="${orderDetailUrl != null}" th:text="'#' + ${ret.order.id}">#1</span>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Ngày đặt</dt>
+                            <dd th:text="${ret.order.orderDate != null ? #temporals.format(ret.order.orderDate, 'dd/MM/yyyy HH:mm') : '—'}">—</dd>
+                        </div>
+                        <div>
+                            <dt>Trạng thái đơn</dt>
+                            <dd th:text="${statusLabels != null and statusLabels[ret.order.status] != null ? statusLabels[ret.order.status] : ret.order.status}">—</dd>
+                        </div>
+                        <div>
+                            <dt>Tổng tiền</dt>
+                            <dd class="price"
+                                th:text="${#numbers.formatDecimal(ret.order.totalAmount, 1, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="return-reason-block">
+                <h3>Lý do hoàn trả</h3>
+                <p class="return-reason-text" th:text="${ret.reason}">Lý do</p>
+            </div>
+
+            <div class="return-image-block" th:if="${ret.imagePath != null and !#strings.isEmpty(ret.imagePath)}">
+                <h3>Ảnh đính kèm</h3>
+                <a th:href="@{${ret.imagePath}}" target="_blank" rel="noopener">
+                    <img th:src="@{${ret.imagePath}}" alt="Ảnh hoàn trả" class="return-image-preview"/>
+                </a>
+            </div>
+        </section>
+
+        <section class="panel" th:if="${orderDetails != null}">
+            <div class="panel-head">
+                <div>
+                    <h2>Sản phẩm trong đơn</h2>
+                    <p th:text="${#lists.size(orderDetails)} + ' dòng sản phẩm'">0 dòng sản phẩm</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Sách</th>
+                        <th>Đơn giá</th>
+                        <th>Số lượng</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="d : ${orderDetails}">
+                        <td>
+                            <img th:if="${d.book != null and d.book.imagePath != null and !#strings.isEmpty(d.book.imagePath)}"
+                                 th:src="@{${d.book.imagePath}}" alt="" class="book-thumb-sm"/>
+                            <span th:unless="${d.book != null and d.book.imagePath != null and !#strings.isEmpty(d.book.imagePath)}"
+                                  class="muted">—</span>
+                        </td>
+                        <td>
+                            <div class="title-cell" th:text="${d.book != null ? d.book.title : '—'}">Tên sách</div>
+                            <div class="muted" th:if="${d.book != null and d.book.author != null}"
+                                 th:text="'Tác giả: ' + d.book.author">Tác giả</div>
+                        </td>
+                        <td class="price"
+                            th:text="${d.unitPrice != null ? (#numbers.formatDecimal(d.unitPrice, 1, 'POINT', 0, 'COMMA') + ' đ') : '—'}">0 đ</td>
+                        <td th:text="${d.quantity}">1</td>
+                        <td class="price"
+                            th:text="${d.lineTotal != null
+                                ? (#numbers.formatDecimal(d.lineTotal, 1, 'POINT', 0, 'COMMA') + ' đ')
+                                : '—'}">0 đ</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(orderDetails)}">
+                        <td colspan="5" class="empty">Đơn không có chi tiết sản phẩm.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>

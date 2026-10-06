@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Danh mục')}"></head>
+<body>
+<div class="site-shell">
+    <nav th:replace="~{fragments/layout :: header('categories')}"></nav>
+
+    <main class="page">
+        <nav th:replace="~{fragments/layout :: breadcrumb('Danh mục')}"></nav>
+
+        <header class="page-header">
+            <div>
+                <h1>Danh mục</h1>
+                <p>Chọn chủ đề để xem sách trong từng danh mục.</p>
+            </div>
+        </header>
+
+        <section class="category-page-grid" th:if="${categories != null and !#lists.isEmpty(categories)}">
+            <a th:each="c : ${categories}"
+               class="category-page-card"
+               th:href="@{/shop(categoryId=${c.id})}">
+                <span class="category-page-icon" aria-hidden="true">📖</span>
+                <strong th:text="${c.name}">Danh mục</strong>
+                <span>Xem sách →</span>
+            </a>
+        </section>
+
+        <p th:if="${categories == null or #lists.isEmpty(categories)}" class="empty">
+            Chưa có danh mục nào.
+        </p>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+</body>
+</html>
